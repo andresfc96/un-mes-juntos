@@ -31,7 +31,8 @@
   /* Intro */
   .intro h1 { font-size: clamp(4rem, 22vw, 6rem); line-height: .95; font-weight: 600; }
   .intro h1 em { color: var(--accent); font-weight: 500; }
-  .intro .line { opacity: 0; transform: translateY(30px); animation: up 1s cubic-bezier(.2,.8,.2,1) forwards; }
+  .intro .line { opacity: 0; transform: translateY(30px); }
+  .started .intro .line { animation: up 1s cubic-bezier(.2,.8,.2,1) forwards; }
   .intro .line:nth-child(2) { animation-delay: .25s; }
   .intro .line:nth-child(3) { animation-delay: .6s; }
   .counter { display: flex; gap: 18px; margin-top: 36px; }
@@ -65,7 +66,7 @@
     display: flex; gap: 4px; z-index: 3; pointer-events: none; }
   .bars i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.35); transition: background .3s; }
   .bars i.on { background: #fff; }
-  .more { position: absolute; right: 20px; bottom: calc(52px + env(safe-area-inset-bottom)); z-index: 3;
+  .more { position: absolute; right: 20px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 3;
     font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,.8);
     pointer-events: none; opacity: 0; transition: opacity .8s 1.4s; }
   .more b { display: inline-block; animation: nudge 1.4s ease-in-out infinite; }
@@ -137,12 +138,40 @@
   .outro small { color: var(--muted); font-size: .75rem; letter-spacing: .2em; text-transform: uppercase; }
   @keyframes beat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.2); } 30% { transform: scale(1); } 45% { transform: scale(1.12); } }
 
+  /* Tap-to-start screen (browsers need a tap before playing audio) */
+  .start {
+    position: fixed; inset: 0; z-index: 20; background: var(--bg);
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 18px;
+    border: 0; color: var(--text); font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: opacity .9s, visibility .9s;
+  }
+  .start .big { margin: 0; pointer-events: none; }
+  .start small { color: var(--muted); font-size: .75rem; letter-spacing: .2em; text-transform: uppercase; }
+  .started .start { opacity: 0; visibility: hidden; }
+
+  /* Music toggle */
+  .sound {
+    position: fixed; z-index: 6; bottom: calc(16px + env(safe-area-inset-bottom)); right: max(16px, calc(50vw - 224px));
+    width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2);
+    background: rgba(18,10,14,.55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    color: var(--text); font-size: 1.1rem; display: none; place-items: center; cursor: pointer;
+  }
+  .has-music .sound { display: grid; }
+  .sound.playing { animation: spin 4s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01s !important; transition-duration: .01s !important; }
   }
 </style>
 </head>
 <body>
+<button class="start" id="start" aria-label="Empezar">
+  <span class="big">❤️</span>
+  <small>toca para empezar</small>
+</button>
+<button class="sound" id="sound" aria-label="Música">🎵</button>
+<audio id="song" src="assets/the-first-time.m4a" loop preload="auto"></audio>
 <div id="fx"></div>
 <nav class="dots" id="dots"></nav>
 
@@ -281,6 +310,32 @@
   });
 
   $("big").onclick = () => { burst("❤️", 36); navigator.vibrate?.([20, 40, 20]); };
+
+  // Music: starts on the first tap, fades in, toggle with the floating button
+  const song = $("song"), sound = $("sound");
+  function fadeIn() {
+    song.volume = 0;
+    const step = setInterval(() => {
+      song.volume = Math.min(1, song.volume + .05);
+      if (song.volume >= 1) clearInterval(step);
+    }, 120);
+  }
+  function setPlaying(on) {
+    sound.classList.toggle("playing", on);
+    sound.textContent = on ? "🎵" : "🔇";
+  }
+  $("start").onclick = () => {
+    document.body.classList.add("started");
+    song.play().then(() => {
+      document.body.classList.add("has-music");
+      setPlaying(true);
+      fadeIn();
+    }).catch(() => {});
+  };
+  sound.onclick = () => {
+    if (song.paused) { song.play(); setPlaying(true); }
+    else { song.pause(); setPlaying(false); }
+  };
 </script>
 </body>
 </html>
