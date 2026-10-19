@@ -42,6 +42,37 @@
   @keyframes up { to { opacity: 1; transform: none; } }
   @keyframes bob { 50% { transform: translateY(8px); opacity: .5; } }
 
+  /* Note */
+  .note { padding: 0 32px; }
+  .note p { font-size: 1.9rem; line-height: 1.25; font-weight: 600; margin-bottom: 22px; }
+  .note p em { color: var(--accent); font-weight: 500; }
+  .note .sign { font-size: 1.3rem; color: var(--muted); font-style: italic; font-weight: 500; }
+  .note > * { opacity: 0; transform: translateY(24px); filter: blur(4px); transition: opacity 1s, transform 1s, filter 1s; }
+  .note.in > * { opacity: 1; transform: none; filter: none; }
+  .note.in > :nth-child(2) { transition-delay: .9s; }
+  .note.in > :nth-child(3) { transition-delay: 1.8s; }
+  .note.in > :nth-child(4) { transition-delay: 2.6s; }
+
+  /* Horizontal carousel inside a photo slide */
+  .track {
+    position: absolute; inset: 0; display: flex;
+    overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .track::-webkit-scrollbar { display: none; }
+  .cell { flex: 0 0 100%; height: 100%; position: relative; overflow: hidden; scroll-snap-align: center; }
+  .bars { position: absolute; top: calc(12px + env(safe-area-inset-top)); left: 16px; right: 16px;
+    display: flex; gap: 4px; z-index: 3; pointer-events: none; }
+  .bars i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.35); transition: background .3s; }
+  .bars i.on { background: #fff; }
+  .more { position: absolute; right: 20px; bottom: calc(52px + env(safe-area-inset-bottom)); z-index: 3;
+    font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,.8);
+    pointer-events: none; opacity: 0; transition: opacity .8s 1.4s; }
+  .more b { display: inline-block; animation: nudge 1.4s ease-in-out infinite; }
+  .photo.in .more { opacity: 1; }
+  .photo.seen .more { opacity: 0; transition-delay: 0s; }
+  @keyframes nudge { 50% { transform: translateX(6px); } }
+
   /* Photo slides */
   .photo img {
     position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
@@ -55,7 +86,7 @@
   }
   .caption {
     position: absolute; left: 24px; right: 24px; bottom: calc(44px + env(safe-area-inset-bottom));
-    text-align: left; z-index: 2;
+    text-align: left; z-index: 2; pointer-events: none;
   }
   .caption small { display: block; font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
   .caption h2 { font-size: 2.6rem; font-weight: 600; line-height: 1.05; margin-top: 4px; }
@@ -80,7 +111,7 @@
     45% { transform: translate(-50%,-50%) scale(.95); }
     100% { transform: translate(-50%,-160%) scale(1); opacity: 0; }
   }
-  .hint { position: absolute; top: calc(20px + env(safe-area-inset-top)); left: 0; right: 0; z-index: 2;
+  .hint { position: absolute; top: calc(30px + env(safe-area-inset-top)); left: 0; right: 0; z-index: 2; pointer-events: none;
     font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,.7);
     opacity: 0; transition: opacity 1s 1.2s; }
   .photo.in .hint { opacity: 1; }
@@ -127,17 +158,25 @@
     </div>
     <p class="swipe">desliza hacia arriba</p>
   </section>
+
+  <section class="slide note serif">
+    <p>No lo vi venir.</p>
+    <p>Llegaste de la forma más <em>inesperada</em>, y sin darme cuenta te volviste una de las personas más importantes de mi vida.</p>
+    <p>Gracias por este primer mes.</p>
+    <span class="sign">— Andrés</span>
+  </section>
 </main>
 
 <script>
   const START = new Date(2026, 8, 19); // the day it all started (month is 0-based)
 
   const PHOTOS = [
-    { src: "assets/day-zero.jpeg",        tag: "Día 0",        title: "La noche en que empezó todo", note: "" },
-    { src: "assets/planetarium.jpeg",     tag: "Medellín",     title: "Planetario",           note: "Entre estrellas" },
-    { src: "assets/first-concert.jpeg",   tag: "Primero",      title: "Nuestro primer concierto", note: "" },
-    { src: "assets/moms-birthday.jpeg",   tag: "Familia",      title: "El cumple de tu mamá",  note: "" },
-    { src: "assets/costume-hunting.jpeg", tag: "Muy pronto",   title: "Bruja y vampiro",      note: "Cargando Halloween… 🎃", fx: "🎃" },
+    { srcs: ["day-zero.jpeg", "day-zero-2.jpeg"],                              tag: "Día 0",      title: "La noche en que empezó todo" },
+    { srcs: ["planetarium.jpeg"],                                              tag: "Medellín",   title: "Planetario", note: "Entre estrellas" },
+    { srcs: ["first-concert.jpeg", "first-concert-2.jpeg", "first-concert-3.jpeg"], tag: "Primero", title: "Nuestro primer concierto" },
+    { srcs: ["us.jpeg", "us-2.jpeg"],                                          tag: "Nosotros",   title: "Tú y yo" },
+    { srcs: ["moms-birthday.jpeg"],                                            tag: "Familia",    title: "El cumple de tu mamá" },
+    { srcs: ["costume-hunting.jpeg"],                                          tag: "Muy pronto", title: "Bruja y vampiro", note: "Cargando Halloween… 🎃", fx: "🎃" },
   ];
 
   const $ = id => document.getElementById(id);
@@ -147,7 +186,11 @@
   PHOTOS.forEach((p, i) => {
     story.insertAdjacentHTML("beforeend", `
       <section class="slide photo" data-fx="${p.fx || ""}">
-        <img src="${p.src}" alt="${p.title}" ${i ? 'loading="lazy"' : ""}>
+        <div class="track">
+          ${p.srcs.map(src => `<div class="cell"><img src="assets/${src}" alt="${p.title}" loading="lazy"></div>`).join("")}
+        </div>
+        ${p.srcs.length > 1 ? `<div class="bars">${p.srcs.map(() => "<i></i>").join("")}</div>
+          <span class="more">desliza <b>→</b></span>` : ""}
         ${i === 0 ? '<p class="hint">toca dos veces ❤️</p>' : ""}
         <div class="caption">
           <small>${p.tag}</small>
@@ -162,6 +205,20 @@
       <button class="big" id="big" aria-label="Corazón">❤️</button>
       <small>tócalo</small>
     </section>`);
+
+  // Carousel bars follow the horizontal scroll
+  document.querySelectorAll(".photo").forEach(slide => {
+    const track = slide.querySelector(".track");
+    const bars = [...slide.querySelectorAll(".bars i")];
+    if (!bars.length) return;
+    const update = () => {
+      const i = Math.round(track.scrollLeft / track.clientWidth);
+      bars.forEach((b, j) => b.classList.toggle("on", j <= i));
+      if (i > 0) slide.classList.add("seen");
+    };
+    track.addEventListener("scroll", update, { passive: true });
+    update();
+  });
 
   // Counter
   function tick() {
