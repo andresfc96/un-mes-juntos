@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#120a0e">
+<title>Un Mes</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Inter:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #120a0e;
+    --text: #fbf1f4;
+    --muted: #d4b5c0;
+    --accent: #ff6b8b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-snap-type: y mandatory; -webkit-text-size-adjust: 100%; }
+  body { background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; overflow-x: hidden; }
+  .serif { font-family: "Cormorant Garamond", Georgia, serif; }
+
+  /* Phone-width column, centered on bigger screens */
+  main { max-width: 480px; margin: 0 auto; position: relative; }
+  .slide {
+    height: 100svh; scroll-snap-align: start; scroll-snap-stop: always;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+  }
+
+  /* Intro */
+  .intro h1 { font-size: clamp(4rem, 22vw, 6rem); line-height: .95; font-weight: 600; }
+  .intro h1 em { color: var(--accent); font-weight: 500; }
+  .intro .line { opacity: 0; transform: translateY(30px); animation: up 1s cubic-bezier(.2,.8,.2,1) forwards; }
+  .intro .line:nth-child(2) { animation-delay: .25s; }
+  .intro .line:nth-child(3) { animation-delay: .6s; }
+  .counter { display: flex; gap: 18px; margin-top: 36px; }
+  .counter b { display: block; font-size: 1.7rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .counter span { font-size: .65rem; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
+  .swipe { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom)); font-size: .75rem;
+    letter-spacing: .2em; text-transform: uppercase; color: var(--muted); animation: bob 1.8s ease-in-out infinite; }
+  @keyframes up { to { opacity: 1; transform: none; } }
+  @keyframes bob { 50% { transform: translateY(8px); opacity: .5; } }
+
+  /* Photo slides */
+  .photo img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    transform: scale(1.15); filter: brightness(.6) blur(6px);
+    transition: transform 6s ease-out, filter 1.2s ease;
+  }
+  .photo.in img { transform: scale(1); filter: none; }
+  .photo::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to top, rgba(18,10,14,.92) 0%, rgba(18,10,14,0) 45%);
+  }
+  .caption {
+    position: absolute; left: 24px; right: 24px; bottom: calc(44px + env(safe-area-inset-bottom));
+    text-align: left; z-index: 2;
+  }
+  .caption small { display: block; font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+  .caption h2 { font-size: 2.6rem; font-weight: 600; line-height: 1.05; margin-top: 4px; }
+  .caption p { color: var(--muted); margin-top: 6px; font-size: .95rem; }
+  .caption > * { opacity: 0; transform: translateY(20px); transition: opacity .8s, transform .8s cubic-bezier(.2,.8,.2,1); }
+  .photo.in .caption > * { opacity: 1; transform: none; }
+  .photo.in .caption > :nth-child(1) { transition-delay: .4s; }
+  .photo.in .caption > :nth-child(2) { transition-delay: .55s; }
+  .photo.in .caption > :nth-child(3) { transition-delay: .7s; }
+
+  /* Progress dots */
+  .dots { position: fixed; right: max(12px, calc(50vw - 228px)); top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+  .dots i { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); transition: height .3s, background .3s; }
+  .dots i.on { height: 20px; background: var(--accent); }
+
+  /* Double-tap heart */
+  .pop { position: absolute; z-index: 3; font-size: 90px; pointer-events: none;
+    transform: translate(-50%,-50%) scale(0); animation: pop .9s ease forwards; }
+  @keyframes pop {
+    30% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+    45% { transform: translate(-50%,-50%) scale(.95); }
+    100% { transform: translate(-50%,-160%) scale(1); opacity: 0; }
+  }
+  .hint { position: absolute; top: calc(20px + env(safe-area-inset-top)); left: 0; right: 0; z-index: 2;
+    font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,.7);
+    opacity: 0; transition: opacity 1s 1.2s; }
+  .photo.in .hint { opacity: 1; }
+
+  /* Floating particles */
+  #fx { position: fixed; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }
+  .float { position: absolute; bottom: -50px; animation: rise linear forwards; }
+  @keyframes rise {
+    0% { transform: translateY(0) rotate(0); opacity: 0; }
+    10% { opacity: .9; }
+    100% { transform: translateY(-115svh) rotate(30deg); opacity: 0; }
+  }
+
+  /* Outro */
+  .outro h2 { font-size: 2.8rem; font-weight: 600; line-height: 1.05; }
+  .outro h2 em { color: var(--accent); font-weight: 500; }
+  .outro > * { opacity: 0; transform: translateY(24px); transition: opacity .9s, transform .9s; }
+  .outro.in > * { opacity: 1; transform: none; }
+  .outro.in > :nth-child(2) { transition-delay: .3s; }
+  .outro.in > :nth-child(3) { transition-delay: .5s; }
+  .big { font-size: 5rem; background: none; border: 0; margin: 28px 0 12px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; animation: beat 1.4s ease-in-out infinite; }
+  .outro small { color: var(--muted); font-size: .75rem; letter-spacing: .2em; text-transform: uppercase; }
+  @keyframes beat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.2); } 30% { transform: scale(1); } 45% { transform: scale(1.12); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01s !important; transition-duration: .01s !important; }
+  }
+</style>
+</head>
+<body>
+<div id="fx"></div>
+<nav class="dots" id="dots"></nav>
+
+<main id="story">
+  <section class="slide intro">
+    <h1 class="serif line">Un</h1>
+    <h1 class="serif line"><em>mes</em></h1>
+    <div class="counter line">
+      <div><b id="d">0</b><span>días</span></div>
+      <div><b id="h">0</b><span>horas</span></div>
+      <div><b id="m">0</b><span>min</span></div>
+      <div><b id="s">0</b><span>seg</span></div>
+    </div>
+    <p class="swipe">desliza hacia arriba</p>
+  </section>
+</main>
+
+<script>
+  const START = new Date(2026, 8, 19); // the day it all started (month is 0-based)
+
+  const PHOTOS = [
+    { src: "assets/day-zero.jpeg",        tag: "Día 0",        title: "La noche en que empezó todo", note: "" },
+    { src: "assets/planetarium.jpeg",     tag: "Medellín",     title: "Planetario",           note: "Entre estrellas" },
+    { src: "assets/first-concert.jpeg",   tag: "Primero",      title: "Nuestro primer concierto", note: "" },
+    { src: "assets/moms-birthday.jpeg",   tag: "Familia",      title: "El cumple de tu mamá",  note: "" },
+    { src: "assets/costume-hunting.jpeg", tag: "Muy pronto",   title: "Bruja y vampiro",      note: "Cargando Halloween… 🎃", fx: "🎃" },
+  ];
+
+  const $ = id => document.getElementById(id);
+  const story = $("story");
+
+  // Build photo slides + outro
+  PHOTOS.forEach((p, i) => {
+    story.insertAdjacentHTML("beforeend", `
+      <section class="slide photo" data-fx="${p.fx || ""}">
+        <img src="${p.src}" alt="${p.title}" ${i ? 'loading="lazy"' : ""}>
+        ${i === 0 ? '<p class="hint">toca dos veces ❤️</p>' : ""}
+        <div class="caption">
+          <small>${p.tag}</small>
+          <h2 class="serif">${p.title}</h2>
+          ${p.note ? `<p>${p.note}</p>` : ""}
+        </div>
+      </section>`);
+  });
+  story.insertAdjacentHTML("beforeend", `
+    <section class="slide outro">
+      <h2 class="serif">Por muchos<br><em>meses más</em></h2>
+      <button class="big" id="big" aria-label="Corazón">❤️</button>
+      <small>tócalo</small>
+    </section>`);
+
+  // Counter
+  function tick() {
+    const t = Math.max(0, Math.floor((Date.now() - START) / 1000));
+    $("d").textContent = Math.floor(t / 86400);
+    $("h").textContent = Math.floor(t % 86400 / 3600);
+    $("m").textContent = Math.floor(t % 3600 / 60);
+    $("s").textContent = t % 60;
+  }
+  tick(); setInterval(tick, 1000);
+
+  // Floating particles
+  function float(char, size, dur) {
+    const el = document.createElement("span");
+    el.className = "float";
+    el.textContent = char;
+    el.style.left = Math.random() * 100 + "vw";
+    el.style.fontSize = size + "px";
+    el.style.animationDuration = dur + "s";
+    $("fx").appendChild(el);
+    el.addEventListener("animationend", () => el.remove());
+  }
+  function burst(char, n) {
+    for (let i = 0; i < n; i++) setTimeout(() => float(char, 18 + Math.random() * 28, 2.5 + Math.random() * 2), i * 45);
+  }
+
+  // Slide reveal + dots
+  const slides = [...document.querySelectorAll(".slide")];
+  $("dots").innerHTML = slides.map(() => "<i></i>").join("");
+  const dots = [...$("dots").children];
+  const io = new IntersectionObserver(entries => entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target, i = slides.indexOf(el);
+    dots.forEach((d, j) => d.classList.toggle("on", j === i));
+    if (!el.classList.contains("in")) {
+      el.classList.add("in");
+      if (el.dataset.fx) setTimeout(() => burst(el.dataset.fx, 14), 600);
+    }
+  }), { threshold: .6 });
+  slides.forEach(s => io.observe(s));
+
+  // Double tap a photo → heart
+  let lastTap = 0;
+  story.addEventListener("click", e => {
+    const slide = e.target.closest(".photo");
+    if (!slide) return;
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      const r = slide.getBoundingClientRect();
+      const h = document.createElement("span");
+      h.className = "pop";
+      h.textContent = "❤️";
+      h.style.left = (e.clientX - r.left) + "px";
+      h.style.top = (e.clientY - r.top) + "px";
+      slide.appendChild(h);
+      h.addEventListener("animationend", () => h.remove());
+      navigator.vibrate?.(15);
+    }
+    lastTap = now;
+  });
+
+  $("big").onclick = () => { burst("❤️", 36); navigator.vibrate?.([20, 40, 20]); };
+</script>
+</body>
+</html>
